@@ -42,16 +42,16 @@ all:
           rhcos_version: 49.84.202110081407-0
           support_level: production
     # Cluster name and dns domain combine to give the cluster namespace that will contain OpenShift endpoints
-    # e.g. api.ocp.homelab.roskosb.info, worker1.ocp.homelab.roskosb.info
-    cluster_name: ocp
-    base_dns_domain: homelab.roskosb.info
+    # e.g. api.mgmt.roskosb.info, worker.mgmtroskosb.info
+    cluster_name: mgmt
+    base_dns_domain: roskosb.info
 
     # OpenShift version
     openshift_full_version: 4.8.12
 
     # Virtual IP addresses used to access the resulting OpenShift cluster
-    api_vip: 192.168.201.96 # the IP address to be used for api.ocp.homelab.roskosb.info and api-int.ocp.homelab.roskosb.info
-    ingress_vip: 192.168.201.97 # the IP address to be used for *.apps.ocp.homelab.roskosb.info
+    api_vip: 192.168.201.96 # the IP address to be used for api.ocp.mgmt.roskosb.info and api-int.ocp.mgmt.roskosb.info
+    ingress_vip: 192.168.201.97 # the IP address to be used for *.apps.ocp.mgmt.roskosb.info
 
     ## Allocate virtual IPs via DHCP server. Equivalent to the vip_dhcp_allocation configuration option of Assisted Installer
     vip_dhcp_allocation: false
@@ -172,14 +172,14 @@ all:
     services:
       hosts:
         assisted_installer:
-          ansible_host: service-vm.homelab.roskosb.info
+          ansible_host: service-vm.mgmt.roskosb.info
           host: 192.168.2.201
           port: 8090 # Do not change
 
         registry_host:
-          ansible_host: service-vm.homelab.roskosb.info
+          ansible_host: service-vm.mgmt.roskosb.info
           registry_port: 5000
-          registry_fqdn: registry.homelab.roskosb.info # use in case of different FQDN for the cert
+          registry_fqdn: registry.mgmt.roskosb.info # use in case of different FQDN for the cert
           cert_common_name: "{{ registry_fqdn }}"
           cert_country: US
           cert_locality: Raleigh
@@ -197,7 +197,7 @@ all:
           # registry_container_image: quay.io/example/registry:latest
 
         dns_host:
-          ansible_host: service-vm.homelab.roskosb.info
+          ansible_host: service-vm.mgmt.roskosb.info
           write_dnsmasq_config: false # Set to false if there is already dns setup
           dns_service_name: dnsmasq
 #          use_dhcp: true
@@ -208,7 +208,7 @@ all:
 #          prefix: 24
 
         http_store:
-          ansible_host: service-vm.homelab.roskosb.info
+          ansible_host: service-vm.mgmt.roskosb.info
 
         ntp_host:
           ansible_host: kvm2.home.brentandkrysti.com
@@ -224,7 +224,12 @@ all:
           network_name: provision
           SETUP_VM_BRIDGE: false
           dns: 192.168.2.2 # DNS used by the bridge
-
+          cert_common_name: "kvm2.home.brentandkrysti.com"
+          cert_country: US
+          cert_locality: Raleigh
+          cert_organization: Red Hat, Inc.
+          cert_organizational_unit: Lab
+          cert_state: NC
 
     # Describe the desired cluster members
     nodes:
@@ -310,7 +315,7 @@ all:
             vm_spec:
               cpu_cores: 6
               ram_mib: 20480
-              disk_size_gb: 30
+              disk_size_gb: 40
           hosts:
             super1:
               ansible_host: 192.168.201.101
