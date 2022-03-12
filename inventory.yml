@@ -6,8 +6,28 @@ all:
     # These options configure Assisted Installer and the resulting cluster
     # https://generator.swagger.io/?url=https://raw.githubusercontent.com/openshift/assisted-service/58a6abd5c99d4e41d939be89cd0962433849a861/swagger.yaml
     # See section: cluster-create-params
+
+    # Cluster name and dns domain combine to give the cluster namespace that will contain OpenShift endpoints
+    # e.g. api.mgmt.roskosb.info, worker.mgmtroskosb.info
+    cluster_name: mgmt
+    base_dns_domain: roskosb.info
+
+    # OpenShift version
+    openshift_full_version: 4.9.18
+
     ai_version: v1.0.24.2
-    assisted_service_openshift_versions:
+    supported_ocp_versions:
+      - 4.6.16
+      - 4.7.33
+      - 4.8.12
+      - 4.9.18
+    ocp_release_versions_map_all:
+      '4.6': 4.6.16
+      '4.7': 4.7.33
+      '4.8': 4.8.12
+      '4.9': 4.9.18
+
+    assisted_service_openshift_versions_defaults:
         "4.6":
           display_name: 4.6.16
           release_image: quay.io/openshift-release-dev/ocp-release:4.6.16-x86_64
@@ -34,20 +54,13 @@ all:
           rhcos_version: 48.84.202109100857-0
           support_level: production
         "4.9":
-          display_name: 4.9.1
-          release_image: quay.io/openshift-release-dev/ocp-release:4.9.1-x86_64
-          release_version: 4.9.1
+          display_name: 4.9.18
+          release_image: quay.io/openshift-release-dev/ocp-release:4.9.18-x86_64
+          release_version: 4.9.18
           rhcos_image: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-4.9.0-x86_64-live.x86_64.iso
           rhcos_rootfs: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-live-rootfs.x86_64.img
           rhcos_version: 49.84.202110081407-0
           support_level: production
-    # Cluster name and dns domain combine to give the cluster namespace that will contain OpenShift endpoints
-    # e.g. api.mgmt.roskosb.info, worker.mgmtroskosb.info
-    cluster_name: mgmt
-    base_dns_domain: roskosb.info
-
-    # OpenShift version
-    openshift_full_version: 4.8.12
 
     # Virtual IP addresses used to access the resulting OpenShift cluster
     api_vip: 192.168.201.96 # the IP address to be used for api.ocp.mgmt.roskosb.info and api-int.ocp.mgmt.roskosb.info
@@ -79,7 +92,7 @@ all:
     # You will need to ensure alternatives are available for anything that will not be automatically set up
     setup_ntp_service: false
     setup_dns_service: false
-    setup_registry_service: false # Only required for a Restricted Network installation
+    setup_registry_service: true # Only required for a Restricted Network installation
     setup_http_store_service: true
 
 
@@ -95,7 +108,7 @@ all:
 
     # use_local_mirror_registry controls if the install process uses a local container registry (mirror_registry) or not.
     # Set this to true to use the mirror registry service set up when `setup_registry_service` is true.
-    use_local_mirror_registry: false
+    use_local_mirror_registry: true
 
     # HTTP Store Configuration
     # ISO name must include the `discovery` directory if you have a SuperMicro machine
@@ -109,7 +122,7 @@ all:
     # Local File Configuration #
     ############################
 
-    repo_root_path: /home/broskos/src/github/homelab-crucible # path to repository root
+    repo_root_path: /home/broskos/src/github/homelab-crucible/ # path to repository root
 
     # Directory in which created/updated artifacts are placed
     fetched_dest: "{{ repo_root_path }}/fetched"
@@ -150,7 +163,8 @@ all:
     ssh_public_key: "{{ lookup('file', local_ssh_public_key_path) }}"
 
     # provided mirror certificate logic, no need to change.
-    local_mirror_certificate_path: "{{ (setup_registry_service == true) | ternary(fetched_dest + '/domain.crt',  repo_root_path + '/mirror_certificate.txt') }}"
+    #local_mirror_certificate_path: "{{ (setup_registry_service == true) | ternary(fetched_dest + '/domain.crt',  repo_root_path + '/mirror_certificate.txt') }}"
+    local_mirror_certificate_path: "{{ repo_root_path + '/mirror_certificate.txt' }}"
     mirror_certificate: "{{ lookup('file', local_mirror_certificate_path) }}"
 
     openshift_version: "{{ openshift_full_version.split('.')[:2] | join('.') }}"
@@ -212,15 +226,16 @@ all:
 
         ntp_host:
           ansible_host: kvm2.home.brentandkrysti.com
-
-        vm_host: # Required for using "KVM" nodes, ignored if not.
+    vm_hosts:
+      hosts:
+        vm_host1: # Required for using "KVM" nodes, ignored if not.
           ansible_user: root
           ansible_host: 192.168.2.105
           host_ip_keyword: ansible_host # the varname in the KVM node hostvars which contains the *IP* of the VM
           images_dir: /vms/sdd/ # directory where qcow images will be placed.
           vm_bridge_ip: 192.168.201.190 # IP for the bridge between VMs and machine network
           vm_bridge_interface: bond0.201 # Interface to be connected to the bridge. DO NOT use your primary interface.
-          bridge_name: brprovision
+          vm_bridge_name: brprovision
           network_name: provision
           SETUP_VM_BRIDGE: false
           dns: 192.168.2.2 # DNS used by the bridge
@@ -298,7 +313,7 @@ all:
               state: up
               addresses:
                 ipv4:
-                  - ip: "{{ ip }}"
+                  - ip: "{{ ansible_host }}"
                     prefix: "{{ mask }}"
           dns_server_ips:
             - "{{ dns1 }}"
@@ -312,15 +327,18 @@ all:
             role: master
             vendor: KVM # this example is a virtual control plane
             bmc_address: "kvm2.home.brentandkrysti.com:8082" # port can be changed using sushy_tools_port on the vm_host
+            vm_host: vm_host1
             vm_spec:
               cpu_cores: 6
               ram_mib: 20480
-              disk_size_gb: 40
+              disk_size_gb: 100
+              extra_disks:
+                odf_data: 100
+
           hosts:
             super1:
               ansible_host: 192.168.201.101
               mac: "DE:AD:BE:EF:C0:2C"
-              ip: 192.168.201.101
 
               # # Uncomment to set custom BMC credentials for the node
               # # These variables must be set in the inventory.vault.yml file
@@ -330,12 +348,10 @@ all:
             super2:
               ansible_host: 192.168.201.102
               mac: "DE:AD:BE:EF:C0:2D"
-              ip: 192.168.201.102
 
             super3:
               ansible_host: 192.168.201.103
               mac: "DE:AD:BE:EF:C0:2E"
-              ip: 192.168.201.103
 
 #        workers:
 #          vars:
