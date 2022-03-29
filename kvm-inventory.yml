@@ -9,7 +9,7 @@ all:
 
     # Cluster name and dns domain combine to give the cluster namespace that will contain OpenShift endpoints
     # e.g. api.mgmt.roskosb.info, worker.mgmtroskosb.info
-    cluster_name: mgmt
+    cluster_name: ran1
     base_dns_domain: roskosb.info
 
     # OpenShift version
@@ -40,7 +40,7 @@ all:
           display_name: 4.7.28
           release_image: quay.io/openshift-release-dev/ocp-release:4.7.28-x86_64
           release_version: 4.7.28
-          rhcos_image: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.7/4.7.13/rhcos-4.7.13-x86_64-live.x86_64.iso
+          rhcos_image: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.7/4.7.13/rhcos-4.7.13-x86_64-live.x86_64.so
           rhcos_rootfs: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.7/4.7.13/rhcos-live-rootfs.x86_64.img
           rhcos_version: 47.83.202105220305-0
           support_level: production
@@ -63,14 +63,14 @@ all:
           support_level: production
 
     # Virtual IP addresses used to access the resulting OpenShift cluster
-    api_vip: 192.168.201.96 # the IP address to be used for api.ocp.mgmt.roskosb.info and api-int.ocp.mgmt.roskosb.info
-    ingress_vip: 192.168.201.97 # the IP address to be used for *.apps.ocp.mgmt.roskosb.info
+    api_vip: 192.168.2.208 # the IP address to be used for api.ocp.mgmt.roskosb.info and api-int.ocp.mgmt.roskosb.info
+    ingress_vip: 192.168.2.209 # the IP address to be used for *.apps.ocp.mgmt.roskosb.info
 
     ## Allocate virtual IPs via DHCP server. Equivalent to the vip_dhcp_allocation configuration option of Assisted Installer
     vip_dhcp_allocation: false
 
     # The subnet on which all nodes are (or will be) accessible.
-    machine_network_cidr: 192.168.201.0/24
+    machine_network_cidr: 192.168.2.0/24
 
     # The IP address pool to use for service IP addresses
     service_network_cidr: 172.30.0.0/16
@@ -92,8 +92,8 @@ all:
     # You will need to ensure alternatives are available for anything that will not be automatically set up
     setup_ntp_service: false
     setup_dns_service: false
-    setup_registry_service: true # Only required for a Restricted Network installation
-    setup_http_store_service: true
+    setup_registry_service: false # Only required for a Restricted Network installation
+    setup_http_store_service: false
 
 
 
@@ -112,11 +112,13 @@ all:
 
     # HTTP Store Configuration
     # ISO name must include the `discovery` directory if you have a SuperMicro machine
-    discovery_iso_name: "discovery/discovery-image.iso"
+    #discovery_iso_name: "discovery/discovery-image.iso"
+    discovery_iso_name: "images/3e912cb4-31f6-4350-87ae-4ba52f3bdeae?api_key=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbmZyYV9lbnZfaWQiOiIzZTkxMmNiNC0zMWY2LTQzNTAtODdhZS00YmE1MmYzYmRlYWUifQ.rGjX8uTAlnl_J8oiaN3fjBX-4hjVHCK0jgFAyAYdNeR49tn0SJ58kxYnDDjQChD-0Z5vmdcwfNGOc9iXDVUPWA&arch=x86_64&type=full-iso&version=4.10"
 
     # discovery_iso_server must be discoverable from all BMCs in order for them to mount the ISO hosted there.
     # It is usually necessary to specify different values for KVM nodes and/or physical BMCs if they are on different subnets.
-    discovery_iso_server: "http://{{ hostvars['http_store']['ansible_host'] }}"
+    #discovery_iso_server: "http://{{ hostvars['http_store']['ansible_host'] }}"
+    discovery_iso_server: "https://assisted-image-service-open-cluster-management.apps.mgmt.roskosb.info"
 
     ############################
     # Local File Configuration #
@@ -189,7 +191,7 @@ all:
           ansible_host: service-vm.mgmt.roskosb.info
           host: 192.168.2.201
           port: 8090 # Do not change
-
+       
         registry_host:
           ansible_host: service-vm.mgmt.roskosb.info
           registry_port: 5000
@@ -200,46 +202,39 @@ all:
           cert_organization: Red Hat, Inc.
           cert_organizational_unit: Lab
           cert_state: NC
-
+      
           # Configure the following secret values in the inventory.vault.yml file
           REGISTRY_HTTP_SECRET: "{{ VAULT_REGISTRY_HOST_REGISTRY_HTTP_SECRET | mandatory }}"
           disconnected_registry_user: "{{ VAULT_REGISTRY_HOST_DISCONNECTED_REGISTRY_USER | mandatory }}"
           disconnected_registry_password: "{{ VAULT_REGISTRY_HOST_DISCONNECTED_REGISTRY_PASSWORD | mandatory }}"
-
+     
           # # registry_container_image defaults to docker.io/library/registry:2
           # # Note that docker.io may rate-limit heavy users. Use this to provide your own image.
           # registry_container_image: quay.io/example/registry:latest
-
+    
         dns_host:
           ansible_host: service-vm.mgmt.roskosb.info
           write_dnsmasq_config: false # Set to false if there is already dns setup
-          dns_service_name: dnsmasq
-#          use_dhcp: true
-#          dhcp_range_first: 192.168.201.96
-#          dhcp_range_last: 192.168.201.130
-#          ntp_server: 192.168.2.105
-#          gateway: 192.168.201.1
-#          prefix: 24
-
+   
         http_store:
           ansible_host: service-vm.mgmt.roskosb.info
-
+  
         ntp_host:
           ansible_host: kvm2.home.brentandkrysti.com
     vm_hosts:
       hosts:
         vm_host1: # Required for using "KVM" nodes, ignored if not.
           ansible_user: root
-          ansible_host: 192.168.2.105
+          ansible_host: kvm.roskosb.info
           host_ip_keyword: ansible_host # the varname in the KVM node hostvars which contains the *IP* of the VM
-          images_dir: /vms/sdd/ # directory where qcow images will be placed.
-          vm_bridge_ip: 192.168.201.190 # IP for the bridge between VMs and machine network
-          vm_bridge_interface: bond0.201 # Interface to be connected to the bridge. DO NOT use your primary interface.
-          vm_bridge_name: brprovision
-          network_name: provision
+          images_dir: /vms/nvme0/ # directory where qcow images will be placed.
+          vm_bridge_ip: 192.168.2.19 # IP for the bridge between VMs and machine network
+          vm_bridge_interface: enp0s31f6  # Interface to be connected to the bridge. DO NOT use your primary interface.
+          vm_bridge_name: brhomelab
+          network_name: homelab
           SETUP_VM_BRIDGE: false
           dns: 192.168.2.2 # DNS used by the bridge
-          cert_common_name: "kvm2.home.brentandkrysti.com"
+          cert_common_name: "kvm.home.brentandkrysti.com"
           cert_country: US
           cert_locality: Raleigh
           cert_organization: Red Hat, Inc.
@@ -303,7 +298,7 @@ all:
         bmc_user: "{{ VAULT_NODES_BMC_USER | mandatory }}"
         bmc_password: "{{ VAULT_NODES_BMC_PASSWORD | mandatory }}"
         dns1: 192.168.2.2
-        gateway: 192.168.201.1
+        gateway: 192.168.2.2
         mask: 24
         network_config:
           interfaces:
@@ -326,32 +321,32 @@ all:
           vars:
             role: master
             vendor: KVM # this example is a virtual control plane
-            bmc_address: "kvm2.home.brentandkrysti.com:8082" # port can be changed using sushy_tools_port on the vm_host
+            bmc_address: "kvm.home.brentandkrysti.com:8082" # port can be changed using sushy_tools_port on the vm_host
             vm_host: vm_host1
             vm_spec:
-              cpu_cores: 8
+              cpu_cores: 6
               ram_mib: 20480
-              disk_size_gb: 50
+              disk_size_gb: 120
               extra_disks:
                 odf_data: 100
 
           hosts:
-            super1:
-              ansible_host: 192.168.201.101
-              mac: "DE:AD:BE:EF:C0:2C"
+            master1:
+              ansible_host: 192.168.2.210
+              mac: "DE:AD:BE:EF:C0:3C"
 
               # # Uncomment to set custom BMC credentials for the node
               # # These variables must be set in the inventory.vault.yml file
               # bmc_user: "{{ VAULT_NODES_SUPER1_BMC_USER | mandatory }}"
               # bmc_password: "{{ VAULT_NODES_SUPER1_BMC_PASSWORD | mandatory }}"
 
-            super2:
-              ansible_host: 192.168.201.102
-              mac: "DE:AD:BE:EF:C0:2D"
+            master2:
+              ansible_host: 192.168.2.211
+              mac: "DE:AD:BE:EF:C0:3D"
 
-            super3:
-              ansible_host: 192.168.201.103
-              mac: "DE:AD:BE:EF:C0:2E"
+            master3:
+              ansible_host: 192.168.2.212
+              mac: "DE:AD:BE:EF:C0:3E"
 
 #        workers:
 #          vars:
