@@ -99,7 +99,7 @@ all:
 
     # NTP Service
     # ntp_server is the address at which the NTP service is (or will be) available
-    ntp_server: kvm2.home.brentandkrysti.com
+    ntp_server: service-vm.mgmt.roskosb.info
     # ntp_server_allow is the range of IPs the NTP service will respond to
     # ntp_server_allow: 10.40.0.0/24 # not required if setup_ntp_service is false
 
@@ -113,7 +113,7 @@ all:
     # HTTP Store Configuration
     # ISO name must include the `discovery` directory if you have a SuperMicro machine
     #discovery_iso_name: "discovery/discovery-image.iso"
-    discovery_iso_name: "images/3e912cb4-31f6-4350-87ae-4ba52f3bdeae?api_key=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbmZyYV9lbnZfaWQiOiIzZTkxMmNiNC0zMWY2LTQzNTAtODdhZS00YmE1MmYzYmRlYWUifQ.rGjX8uTAlnl_J8oiaN3fjBX-4hjVHCK0jgFAyAYdNeR49tn0SJ58kxYnDDjQChD-0Z5vmdcwfNGOc9iXDVUPWA&arch=x86_64&type=full-iso&version=4.10"
+    discovery_iso_name: "/images/e4010dc5-b079-4c34-b142-6618e77f1fc4?api_key=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbmZyYV9lbnZfaWQiOiJlNDAxMGRjNS1iMDc5LTRjMzQtYjE0Mi02NjE4ZTc3ZjFmYzQifQ.KABHZglzTIqNPoyZwcLx_4JrnxE-KSxrURyDfTW56xY-KcZWueKh1vlfrSSMje-Ngaedu8jfyB8Diqg4V1xfXw&arch=x86_64&type=full-iso&version=4.10"
 
     # discovery_iso_server must be discoverable from all BMCs in order for them to mount the ISO hosted there.
     # It is usually necessary to specify different values for KVM nodes and/or physical BMCs if they are on different subnets.
@@ -334,6 +334,7 @@ all:
             master1:
               ansible_host: 192.168.2.210
               mac: "DE:AD:BE:EF:C0:3C"
+              uuid: 8e40647b-3b89-4c51-a836-e4ec0fef92d2
 
               # # Uncomment to set custom BMC credentials for the node
               # # These variables must be set in the inventory.vault.yml file
@@ -343,20 +344,34 @@ all:
             master2:
               ansible_host: 192.168.2.211
               mac: "DE:AD:BE:EF:C0:3D"
+              uuid: ac946584-283d-43c8-aa9b-40e5a2591e75
 
             master3:
               ansible_host: 192.168.2.212
               mac: "DE:AD:BE:EF:C0:3E"
+              uuid: 183ef7d6-9dbb-4dde-bd1b-4113dbd7c183
 
-#        workers:
-#          vars:
-#            role: worker
-#            vendor: Dell # This example uses baremetal worker nodes
-#          hosts:
-#            worker1:
-#              ansible_host: 192.168.201.104
-#              bmc_address: 172.28.11.25
-#              mac: 3C:FD:FE:78:AB:03
+        workers:
+          vars:
+            role: worker
+            vendor: KVM # this example is a virtual control plane
+            bmc_address: "kvm.home.brentandkrysti.com:8082" # port can be changed using sushy_tools_port on the vm_host
+            vm_host: vm_host1
+            vm_spec:
+              cpu_cores: 4
+              ram_mib: 10240
+              disk_size_gb: 120
+          hosts:
+
+            worker1:
+              ansible_host: 192.168.2.213
+              mac: "DE:AD:BE:EF:C0:3F"
+              uuid: 4deacec7-8e1b-45e7-a012-66301d42d775
+
+            worker2:
+              ansible_host: 192.168.2.214
+              mac: "DE:AD:BE:EF:C0:40"
+              uuid: d040c7ef-90db-45bd-863b-a81041bdc23e
 
               # # Uncomment to set custom BMC credentials for the node
               # # These variables must be set in the inventory.vault.yml file
