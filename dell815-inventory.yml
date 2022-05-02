@@ -63,14 +63,14 @@ all:
           support_level: production
 
     # Virtual IP addresses used to access the resulting OpenShift cluster
-    api_vip: 192.168.2.208 # the IP address to be used for api.ocp.mgmt.roskosb.info and api-int.ocp.mgmt.roskosb.info
-    ingress_vip: 192.168.2.209 # the IP address to be used for *.apps.ocp.mgmt.roskosb.info
+    api_vip: 192.168.201.199
+    ingress_vip: 192.168.201.200 # the IP address to be used for *.apps.ocp.mgmt.roskosb.info
 
     ## Allocate virtual IPs via DHCP server. Equivalent to the vip_dhcp_allocation configuration option of Assisted Installer
     vip_dhcp_allocation: false
 
     # The subnet on which all nodes are (or will be) accessible.
-    machine_network_cidr: 192.168.2.0/24
+    machine_network_cidr: 192.168.201.0/24
 
     # The IP address pool to use for service IP addresses
     service_network_cidr: 172.30.0.0/16
@@ -220,12 +220,12 @@ all:
           ansible_host: service-vm.mgmt.roskosb.info
   
         ntp_host:
-          ansible_host: kvm2.home.brentandkrysti.com
+          ansible_host: dell815.roskosb.info
     vm_hosts:
       hosts:
         vm_host1: # Required for using "KVM" nodes, ignored if not.
           ansible_user: root
-          ansible_host: dell85.roskosb.info
+          ansible_host: dell815.roskosb.info
           host_ip_keyword: ansible_host # the varname in the KVM node hostvars which contains the *IP* of the VM
           images_dir: /vms/sda/ # directory where qcow images will be placed.
           vm_bridge_ip: 192.168.201.191 # IP for the bridge between VMs and machine network
@@ -333,9 +333,8 @@ all:
           hosts:
             master1:
               ansible_host: 192.168.201.210
-              mac: "DE:AD:BE:EF:C0:3C"
+              mac: "DE:AD:BE:EF:C0:50"
               uuid: 8e40647b-3b89-4c51-a836-e4ec0fef92d2
-              installation_disk_path: /vms/sdc
 
               # # Uncomment to set custom BMC credentials for the node
               # # These variables must be set in the inventory.vault.yml file
@@ -344,15 +343,13 @@ all:
 
             master2:
               ansible_host: 192.168.201.211
-              mac: "DE:AD:BE:EF:C0:3D"
-              uuid: ac946584-283d-43c8-aa9b-402e5a2591e75
-              installation_disk_path: /vms/sdc
+              mac: "DE:AD:BE:EF:C0:52"
+              uuid: 183ef7d6-9dbb-4dde-bd1b-4113dbd7c199
 
             master3:
               ansible_host: 192.168.201.212
-              mac: "DE:AD:BE:EF:C0:3E"
+              mac: "DE:AD:BE:EF:C0:53"
               uuid: 183ef7d6-9dbb-4dde-bd1b-4113dbd7c183
-              installation_disk_path: /vms/sdd
 
         workers:
 #          vars:

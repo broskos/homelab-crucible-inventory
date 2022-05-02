@@ -13,19 +13,19 @@ all:
     base_dns_domain: roskosb.info
 
     # OpenShift version
-    openshift_full_version: 4.9.25
+    openshift_full_version: 4.9.29
 
     ai_version: v1.0.24.2
     supported_ocp_versions:
       - 4.6.16
       - 4.7.33
       - 4.8.12
-      - 4.9.25
+      - 4.9.29
     ocp_release_versions_map_all:
       '4.6': 4.6.16
       '4.7': 4.7.33
       '4.8': 4.8.12
-      '4.9': 4.9.25
+      '4.9': 4.9.29
 
     assisted_service_openshift_versions_defaults:
         "4.6":
@@ -54,9 +54,9 @@ all:
           rhcos_version: 48.84.202109100857-0
           support_level: production
         "4.9":
-          display_name: 4.9.25
-          release_image: quay.io/openshift-release-dev/ocp-release:4.9.25-x86_64
-          release_version: 4.9.25
+          display_name: 4.9.29
+          release_image: quay.io/openshift-release-dev/ocp-release:4.9.29-x86_64
+          release_version: 4.9.29
           rhcos_image: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-4.9.0-x86_64-live.x86_64.iso
           rhcos_rootfs: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/4.9/4.9.0/rhcos-live-rootfs.x86_64.img
           rhcos_version: 49.84.202110081407-0
@@ -236,7 +236,7 @@ all:
           ansible_user: root
           ansible_host: 192.168.2.105
           host_ip_keyword: ansible_host # the varname in the KVM node hostvars which contains the *IP* of the VM
-          images_dir: /vms/nvme-mount/ # directory where qcow images will be placed.
+          images_dir: /vms/nvme0/ # directory where qcow images will be placed.
           vm_bridge_ip: 192.168.201.190 # IP for the bridge between VMs and machine network
           vm_bridge_interface: bond0.201 # Interface to be connected to the bridge. DO NOT use your primary interface.
           vm_bridge_name: brprovision
