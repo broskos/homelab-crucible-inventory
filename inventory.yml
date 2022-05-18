@@ -15,7 +15,9 @@ all:
     # OpenShift version
     openshift_full_version: 4.9.29
 
-    ai_version: v1.0.24.2
+    #ai_version: v1.0.24.2
+    ai_version: v2.1.0
+    cluster_id: eeca1614-93ca-4626-a0cc-d17b187f8f1e
     supported_ocp_versions:
       - 4.6.16
       - 4.7.33
@@ -309,22 +311,57 @@ all:
         dns1: 192.168.2.2
         gateway: 192.168.201.1
         mask: 24
+#        network_config:
+#          interfaces:
+#            - name: enp1s0
+#              type: ethernet
+#              mac: "{{ mac }}"
+#              state: up
+#              addresses:
+#                ipv4:
+#                  - ip: "{{ ansible_host }}"
+#                    prefix: "{{ mask }}"
+#          dns_server_ips:
+#            - "{{ dns1 }}"
+#          routes:
+#            - destination: 0.0.0.0/0
+#              address: "{{ gateway }}"
+#              interface: enp1s0
+        mac_interface_map:
+         - logical_nic_name: ens3f1
+           mac_address: "{{ mac }}"
+         - logical_nic_name: eno2
+           mac_address: "{{ eno2mac }}"
         network_config:
-          interfaces:
-            - name: enp1s0
-              type: ethernet
-              mac: "{{ mac }}"
-              state: up
-              addresses:
+          raw:
+            interfaces:
+              - name: eno2
+                type: ethernet
+                state: up
                 ipv4:
-                  - ip: "{{ ansible_host }}"
-                    prefix: "{{ mask }}"
-          dns_server_ips:
-            - "{{ dns1 }}"
-          routes:
-            - destination: 0.0.0.0/0
-              address: "{{ gateway }}"
-              interface: enp1s0
+                  enabled: false
+                  dhcp: false
+                ipv6:
+                  enabled: false
+                  dhcp: false
+              - name: ens3f1
+                type: ethernet
+                state: up
+                ipv4:
+                  address:
+                    - ip: "{{ ansible_host }}"
+                      prefix-length: "{{ mask }}"
+                  enabled: true
+            dns-resolver:
+              config:
+                server:
+                  - "{{ dns1 }}"
+            routes:
+              config:
+                - destination: 0.0.0.0/0
+                  next-hop-address: "{{ gateway }}"
+                  next-hop-interface: ens3f1
+                  metric: 50
       children:
         masters:
           vars:
@@ -342,12 +379,15 @@ all:
             super1:
               ansible_host: 192.168.201.101
               mac: "DE:AD:BE:EF:C0:2C"
+              eno2mac: "DE:AD:BE:EF:D0:2C"
             super2:
               ansible_host: 192.168.201.102
               mac: "DE:AD:BE:EF:C0:2D"
+              eno2mac: "DE:AD:BE:EF:D0:2D"
               images_dir: /vms/sdb-mount
 
             super3:
               ansible_host: 192.168.201.103
               mac: "DE:AD:BE:EF:C0:2E"
+              eno2mac: "DE:AD:BE:EF:D0:2E"
               images_dir: /vms/sdd

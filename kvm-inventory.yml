@@ -324,8 +324,8 @@ all:
             bmc_address: "kvm.home.brentandkrysti.com:8082" # port can be changed using sushy_tools_port on the vm_host
             vm_host: vm_host1
             vm_spec:
-              cpu_cores: 6
-              ram_mib: 20480
+              cpu_cores: 8
+              ram_mib: 32768
               disk_size_gb: 120
               extra_disks:
                 odf_data: 100
